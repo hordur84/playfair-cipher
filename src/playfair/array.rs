@@ -1,4 +1,4 @@
-use std::fmt::{self, Display};
+use std::fmt::{self, Display, Debug};
 use std::cmp::PartialEq;
 
 #[derive(PartialEq, Debug)]
@@ -17,8 +17,8 @@ impl<T> Board<T> where T: Copy + Display + PartialEq {
 
         let mut state = [[data[0]; 5]; 5];
 
-        for i in 0..state[0].len() {
-            for j in 0..state[1].len() {
+        for i in 0..state.len() {
+            for j in 0..state[0].len() {
                 state[i][j] = data[i * 5 + j];
             }
         }

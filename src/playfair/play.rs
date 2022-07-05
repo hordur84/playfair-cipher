@@ -1,26 +1,27 @@
-use std::fmt::Display;
-use std::cmp::PartialEq;
-
 use super::array::{Board, BoardShape};
-use super::utils::convert_to_char;
 
-struct PlayfairPair<T> {
-    x: T,
-    y: T
+struct PlayfairPair {
+    x: u8,
+    y: u8
 }
 
-struct PlayfairState<T> where T: Display + PartialEq {
-    board: Board<T>
+enum PlayfairMethod {
+    DECODE,
+    ENCODE
 }
 
-impl<T> PlayfairState<T> where T: Display + PartialEq + Copy {
+struct PlayfairState {
+    board: Board<u8>
+}
 
-    fn init(data: &[T]) -> Self {
+impl PlayfairState {
+
+    fn init(data: &[u8]) -> Self {
         
         PlayfairState { board: Board::init(data) }
     }
 
-    fn encode_row(&self, pair: [T; 2]) -> [T; 2] {
+    fn encode_row(&self, pair: [u8; 2]) -> [u8; 2] {
         let mut data = [pair[0]; 2];
 
         for i in 0..pair.len() {
@@ -35,7 +36,7 @@ impl<T> PlayfairState<T> where T: Display + PartialEq + Copy {
         data
     }
 
-    fn encode_column(&self, pair: [T; 2]) -> [T; 2] {
+    fn encode_column(&self, pair: [u8; 2]) -> [u8; 2] {
         let mut data = [pair[0]; 2];
 
         for i in 0..pair.len() {
@@ -50,7 +51,22 @@ impl<T> PlayfairState<T> where T: Display + PartialEq + Copy {
         data
     }
 
-    fn encode_rectangle(&self, pair: [T; 2]) -> [T; 2] {
+    fn decode_column(&self, pair: [u8; 2]) -> [u8; 2] {
+        let mut data = [0; 2];
+
+        for i in 0..pair.len() {
+            let p = self.board.get_position(pair[i]).unwrap();
+            let p_updated = if p[0] == 0 {
+                self.board.state[self.board.state.len()-1][p[1]]
+            } else {
+                self.board.state[p[0]-1][p[1]]
+            };
+            data[i] = p_updated;
+        }
+        data
+    }
+
+    fn encode_rectangle(&self, pair: [u8; 2]) -> [u8; 2] {
         let mut data = [pair[0]; 2];
         let p1 = self.board.get_position(pair[0]).unwrap();
         let p2 = self.board.get_position(pair[1]).unwrap();
@@ -60,7 +76,7 @@ impl<T> PlayfairState<T> where T: Display + PartialEq + Copy {
         data
     }
 
-    pub fn encode(&self, pair: [T; 2]) -> [T; 2] {
+    fn encode_pair(&self, pair: [u8; 2]) -> [u8; 2] {
 
         let shape = self.board.get_shape(pair);
 
@@ -77,7 +93,23 @@ impl<T> PlayfairState<T> where T: Display + PartialEq + Copy {
         }
     }
 
-    pub fn prepare(&self, message: &[u8]) -> Vec<PlayfairPair<u8>> {
+    pub fn decode_pair(&self, pair: [u8; 2]) -> [u8; 2] {
+        let shape = self.board.get_shape(pair);
+
+        match shape {
+            BoardShape::COLUMN => {
+                self.decode_column(pair)
+            },
+            BoardShape::ROW => {
+                !todo!()
+            },
+            BoardShape::RECTANGLE => {
+                !todo!()
+            }
+        }
+    }
+
+    fn process(&self, message: &[u8]) -> Vec<PlayfairPair> {
 
         let mut data = vec![];
         let mut message = message.to_vec();
@@ -96,13 +128,13 @@ impl<T> PlayfairState<T> where T: Display + PartialEq + Copy {
         data
     }
 
-    pub fn ingest(&self, message: &[u8]) -> Vec<PlayfairPair<u8>> {
+    pub fn encode(&self, message: &[u8]) -> Vec<PlayfairPair> {
 
         let mut data = vec![];
-        let message = self.prepare(message);
+        let message = self.process(message);
 
         for pair in message {
-            let encoded = self.encode([pair.x, pair.y]);
+            let encoded = self.encode_pair([pair.x, pair.y]);
             let pair_encoded = PlayfairPair {
                 x: encoded[0],
                 y: encoded[1]
@@ -117,16 +149,15 @@ pub fn main() {
 
     const CHARS: &[u8; 25] = b"ABCDEFGHIJKLMNOPQRSTUVXYZ";
 
-    let chars = convert_to_char(CHARS);
-    let p = PlayfairState::init(&chars);
+    let p = PlayfairState::init(CHARS);
 
-    let pair = ['G', 'O'];
+    let pair = ['G' as u8, 'O' as u8];
 
     println!("{}", p.board);
 
-    println!("encode: {:?}", p.encode(pair));
+    println!("encode: {:?}", p.encode_pair(pair));
 
-    let data = p.prepare(b"HELLO MR SVANSON");
+    let data = p.process(b"HELLOMRSVANSON");
     for item in &data {
         print!("{} {} ", item.x, item.y);
     }
@@ -135,4 +166,22 @@ pub fn main() {
         print!("{} {} ", item.x as char, item.y as char);
     }
     print!("\n");
+
+    let data = p.encode(b"HELLOMRSVANSON");
+    for item in &data {
+        print!("{} {} ", item.x, item.y);
+    }
+    print!("\n");
+    for item in &data {
+        print!("{} {} ", item.x as char, item.y as char);
+    }
+    print!("\n");
+
+    /* Array test */
+    let s = [[1; 3]; 2];
+    println!("s: {:?}", s);
+    println!("s row: {}", s.len());
+    println!("s col: {}", s[0].len());
+
+    println!("decode: {:?}", p.decode_pair([65, 70]))
 }
