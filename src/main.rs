@@ -11,7 +11,9 @@ fn main() {
     println!("Hello, world!");
 
     /* Playfair cypher */
-    playfair::container::main();
+    //playfair::container::main();
+    //playfair::array::main();
+    playfair::play::main();
 
     /* Playing around with hash libraries */
     //hash::main();
