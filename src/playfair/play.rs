@@ -4,7 +4,10 @@ use std::cmp::PartialEq;
 use super::array::{Board, BoardShape};
 use super::utils::convert_to_char;
 
-const CHARS: &[u8; 25] = b"ABCDEFGHIJKLMNOPQRSTUVXYZ";
+struct PlayfairPair<T> {
+    x: T,
+    y: T
+}
 
 struct PlayfairState<T> where T: Display + PartialEq {
     board: Board<T>
@@ -73,9 +76,46 @@ impl<T> PlayfairState<T> where T: Display + PartialEq + Copy {
             }
         }
     }
+
+    pub fn prepare(&self, message: &[u8]) -> Vec<PlayfairPair<u8>> {
+
+        let mut data = vec![];
+        let mut message = message.to_vec();
+
+        if message.len() % 2 != 0 {
+            message.push('X' as u8);
+        }
+
+        for i in (0..message.len()).step_by(2) {
+            let pair = PlayfairPair {
+                x: message[i],
+                y: message[i+1]
+            };
+            data.push(pair);
+        }
+        data
+    }
+
+    pub fn ingest(&self, message: &[u8]) -> Vec<PlayfairPair<u8>> {
+
+        let mut data = vec![];
+        let message = self.prepare(message);
+
+        for pair in message {
+            let encoded = self.encode([pair.x, pair.y]);
+            let pair_encoded = PlayfairPair {
+                x: encoded[0],
+                y: encoded[1]
+            };
+            data.push(pair_encoded);
+        }
+        data
+    }
 }
 
 pub fn main() {
+
+    const CHARS: &[u8; 25] = b"ABCDEFGHIJKLMNOPQRSTUVXYZ";
 
     let chars = convert_to_char(CHARS);
     let p = PlayfairState::init(&chars);
@@ -85,4 +125,14 @@ pub fn main() {
     println!("{}", p.board);
 
     println!("encode: {:?}", p.encode(pair));
+
+    let data = p.prepare(b"HELLO MR SVANSON");
+    for item in &data {
+        print!("{} {} ", item.x, item.y);
+    }
+    print!("\n");
+    for item in &data {
+        print!("{} {} ", item.x as char, item.y as char);
+    }
+    print!("\n");
 }
