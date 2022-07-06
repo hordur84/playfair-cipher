@@ -1,8 +1,8 @@
 use super::array::{Board, BoardShape};
 
 struct PlayfairPair {
-    x: u8,
-    y: u8
+    x: char,
+    y: char
 }
 
 enum PlayfairMethod {
@@ -11,15 +11,40 @@ enum PlayfairMethod {
 }
 
 struct PlayfairState {
-    board: Board<u8>,
+    board: Board<char>,
     msg_digested: Vec<PlayfairPair>,
 }
 
 impl PlayfairState {
 
-    pub fn init(data: &[u8]) -> Self {
+    /// Initialize a Playfair table with a secret phrase.
+    pub fn init(phrase: &str) -> Result<Self, String> {
         
-        PlayfairState { board: Board::init(data), msg_digested: vec![] }
+        let mut data: Vec<char> = vec![];
+        let phrase = phrase.replace(" ", "").to_uppercase();
+        let phrase = phrase.as_bytes();
+        const ALPHABET: &[u8; 25] = b"ABCDEFGHIJKLMNOPQRSTUVXYZ";
+    
+        for letter in phrase {
+            if !data.contains(&(*letter as char)) {
+                data.push(*letter as char);
+            }      
+        }
+    
+        for letter in ALPHABET {
+            if !data.contains(&(*letter as char)) {
+                data.push(*letter as char);
+            }
+        }
+
+        match data.len() {
+            25 => {
+                Ok(PlayfairState { board: Board::init(&data), msg_digested: vec![] })
+            },
+            _ => {
+                Err(String::from("Choose another phrase!"))
+            }
+        }
     }
 
     /// Returns the processed pairs that are contained within a row of `board`. A pair is encoded
@@ -33,7 +58,7 @@ impl PlayfairState {
     /// - `[0,2]` and `[1,4]` -> `[0,3]` and `[1,5]` resepectively. 
     /// Given that `[0,2]` and `[1,4]` are within the same row.
     /// ```
-    fn process_pair_row(&self, pair: [u8; 2], method: &PlayfairMethod) -> [u8; 2] {
+    fn process_pair_row(&self, pair: [char; 2], method: &PlayfairMethod) -> [char; 2] {
         let mut data = [pair[0]; 2];
 
         for i in 0..pair.len() {
@@ -71,7 +96,7 @@ impl PlayfairState {
     /// - `[0,2]` and `[1,4]` -> `[1,2]` and `[2,4]` resepectively. 
     /// Given that `[0,2]` and `[1,4]` are within the same column.
     /// ```
-    fn process_pair_column(&self, pair: [u8; 2], method: &PlayfairMethod) -> [u8; 2] {
+    fn process_pair_column(&self, pair: [char; 2], method: &PlayfairMethod) -> [char; 2] {
         let mut data = [pair[0]; 2];
 
         for i in 0..pair.len() {
@@ -109,7 +134,7 @@ impl PlayfairState {
     /// - `[0,2]` and `[1,4]` -> `[0,4]` and `[1,2]` resepectively. 
     /// Given that `[0,2]` and `[1,4]` make up a rectangle within the `board` context.
     /// ```
-    fn process_pair_rectangle(&self, pair: [u8; 2]) -> [u8; 2] {
+    fn process_pair_rectangle(&self, pair: [char; 2]) -> [char; 2] {
         let mut data = [pair[0]; 2];
         let p1 = self.board.get_position(pair[0]).unwrap();
         let p2 = self.board.get_position(pair[1]).unwrap();
@@ -126,7 +151,7 @@ impl PlayfairState {
     /// - `pair`: Array of two values contained within a `board`.
     /// - `method`: How to process the pair, can be either `encode` or `decode`.
     /// ```
-    fn process_pair(&self, pair: [u8; 2], method: &PlayfairMethod) -> [u8; 2] {
+    fn process_pair(&self, pair: [char; 2], method: &PlayfairMethod) -> [char; 2] {
 
         let shape = self.board.get_shape(pair);
 
@@ -161,8 +186,8 @@ impl PlayfairState {
 
         for i in (0..message.len()).step_by(2) {
             let pair = PlayfairPair {
-                x: message[i],
-                y: message[i+1]
+                x: message[i] as char,
+                y: message[i+1] as char
             };
             data.push(pair);
         }
@@ -173,10 +198,6 @@ impl PlayfairState {
     pub fn show(&self) {
         for pair in &self.msg_digested {
             print!("{} {} ", pair.x, pair.y);
-        }
-        print!("\n");
-        for pair in &self.msg_digested {
-            print!("{} {} ", pair.x as char, pair.y as char);
         }
         print!("\n");
     }
@@ -201,9 +222,9 @@ impl PlayfairState {
 
 pub fn main() {
 
-    const CHARS: &[u8; 25] = b"ABCDEFGHIJKLMNOPQRSTUVXYZ";
+    //const CHARS: &[u8; 25] = b"ABCDEFGHIJKLMNOPQRSTUVXYZ";
 
-    let mut p = PlayfairState::init(CHARS);
+    let mut p = PlayfairState::init("Playfair exmaple").unwrap();
     println!("{}", p.board);
 
     let msg = "Hello mr peter";
@@ -218,31 +239,4 @@ pub fn main() {
 
     let decoded = p.playfair(PlayfairMethod::DECODE);
     println!("decoded: {}", decoded);
-
-    let phrase = create_playfair("playfair example");
-    println!("length: {}", phrase.len());
-    for p in phrase {
-        print!("{}", p as char);
-    }
-}
-
-fn create_playfair(phrase: &str) -> Vec<u8> {
-
-    let mut data: Vec<u8> = vec![];
-    let phrase = phrase.replace(" ", "").to_uppercase();
-    let phrase = phrase.as_bytes();
-    const ALPHABET: &[u8; 25] = b"ABCDEFGHIJKLMNOPQRSTUVXYZ";
-
-    for letter in phrase {
-        if !data.contains(letter) {
-            data.push(*letter);
-        }      
-    }
-
-    for letter in ALPHABET {
-        if !data.contains(&letter) {
-            data.push(*letter);
-        }
-    }
-    data
 }
