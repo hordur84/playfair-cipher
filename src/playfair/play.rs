@@ -10,7 +10,7 @@ enum PlayfairMethod {
     ENCODE
 }
 
-struct PlayfairState {
+pub struct PlayfairState {
     board: Board<char>,
     msg_digested: Vec<PlayfairPair>,
 }
@@ -194,6 +194,7 @@ impl PlayfairState {
 
     /// Show debug information for digested message.
     pub fn show(&self) {
+        println!("{}", self.board);
         for pair in &self.msg_digested {
             print!("{} {} ", pair.x, pair.y);
         }
@@ -204,7 +205,7 @@ impl PlayfairState {
     /// # Arguments
     /// 
     /// - `method`: specify the method, either `encode` or `decode`.
-    pub fn playfair(&mut self, method: PlayfairMethod) -> String {
+    fn playfair(&mut self, method: PlayfairMethod) -> String {
 
         let mut data = String::new();
 
@@ -217,32 +218,39 @@ impl PlayfairState {
         data
     }
 
+    pub fn playfair_encode(&mut self) -> String {
+        self.playfair(PlayfairMethod::ENCODE)
+    }
+
+    pub fn playfair_decode(&mut self) -> String {
+        self.playfair(PlayfairMethod::DECODE)
+    }
+
     /// Return a filtered array. Removing everything except the byte representation of the uppercase english
     /// alphabet, except for the letter `J`.
     /// https://en.wikipedia.org/wiki/Playfair_cipher
     fn filter(&self, msg: &str) -> Vec<u8> {
         let msg = msg.to_uppercase().as_bytes().to_vec();
         let msg: Vec<u8> = msg.into_iter().filter(|&x| x >= 65 && x <= 90 && x != 74).collect();
-        println!("msg is: {:?}", msg);
         msg
     }
 }
 
 pub fn main() {
 
-    let mut p = PlayfairState::init("Grunts").unwrap();
-    println!("{}", p.board);
+    // let mut p = PlayfairState::init("Grunts").unwrap();
+    // println!("{}", p.board);
 
-    let msg = "Hello, how are you on this fine evening?";
-    p.digest(msg);
-    p.show();
+    // let msg = "Hello, how are you on this fine evening?";
+    // p.digest(msg);
+    // p.show();
 
-    let encoded = p.playfair(PlayfairMethod::ENCODE);
-    println!("encoded: {}", encoded);
+    // let encoded = p.playfair(PlayfairMethod::ENCODE);
+    // println!("encoded: {}", encoded);
 
-    p.digest(&encoded);
-    p.show();
+    // p.digest(&encoded);
+    // p.show();
 
-    let decoded = p.playfair(PlayfairMethod::DECODE);
-    println!("decoded: {}", decoded);
+    // let decoded = p.playfair(PlayfairMethod::DECODE);
+    // println!("decoded: {}", decoded);
 }
