@@ -2,7 +2,7 @@ pub mod hash;
 pub mod binary;
 pub mod playfair;
 
-use playfair::play::PlayfairState;
+use playfair::play::PlayfairCypher;
 
 fn main() {
 
@@ -12,7 +12,7 @@ fn main() {
     /* Playing around with binary convertion */
     //binary::main();
 
-    let mut playfair_cypher = PlayfairState::init("Playfair example").unwrap();
+    let mut playfair_cypher = PlayfairCypher::init("Playfair example").unwrap();
 
     let message = "Hello, how are you this evening?";
     println!("message: {}", message);

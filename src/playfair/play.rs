@@ -1,21 +1,16 @@
 use super::array::{Board, BoardShape};
 
-struct PlayfairPair {
-    x: char,
-    y: char
-}
-
 enum PlayfairMethod {
     DECODE,
     ENCODE
 }
 
-pub struct PlayfairState {
+pub struct PlayfairCypher {
     board: Board<char>,
-    msg_digested: Vec<PlayfairPair>,
+    msg_digested: Vec<[char; 2]>,
 }
 
-impl PlayfairState {
+impl PlayfairCypher {
 
     /// Initialize a Playfair table with a secret phrase.
     pub fn init(phrase: &str) -> Result<Self, String> {
@@ -39,7 +34,7 @@ impl PlayfairState {
 
         match data.len() {
             25 => {
-                Ok(PlayfairState { board: Board::init(&data), msg_digested: vec![] })
+                Ok(PlayfairCypher { board: Board::init(&data), msg_digested: vec![] })
             },
             _ => {
                 Err(String::from("Choose another phrase!"))
@@ -183,11 +178,7 @@ impl PlayfairState {
         }
 
         for i in (0..message.len()).step_by(2) {
-            let pair = PlayfairPair {
-                x: message[i] as char,
-                y: message[i+1] as char
-            };
-            data.push(pair);
+            data.push([message[i] as char, message[i+1] as char]);
         }
         self.msg_digested = data;
     }
@@ -196,7 +187,7 @@ impl PlayfairState {
     pub fn show(&self) {
         println!("{}", self.board);
         for pair in &self.msg_digested {
-            print!("{} {} ", pair.x, pair.y);
+            print!("{} {} ", pair[0], pair[1]);
         }
         print!("\n");
     }
@@ -210,7 +201,7 @@ impl PlayfairState {
         let mut data = String::new();
 
         for pair in &self.msg_digested {
-            let pair_encoded = self.process_pair([pair.x, pair.y], &method);
+            let pair_encoded = self.process_pair([pair[0], pair[1]], &method);
             
             data.push(pair_encoded[0] as char);
             data.push(pair_encoded[1] as char);
