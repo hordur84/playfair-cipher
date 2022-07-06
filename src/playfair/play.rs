@@ -11,14 +11,15 @@ enum PlayfairMethod {
 }
 
 struct PlayfairState {
-    board: Board<u8>
+    board: Board<u8>,
+    msg_digested: Vec<PlayfairPair>,
 }
 
 impl PlayfairState {
 
-    fn init(data: &[u8]) -> Self {
+    pub fn init(data: &[u8]) -> Self {
         
-        PlayfairState { board: Board::init(data) }
+        PlayfairState { board: Board::init(data), msg_digested: vec![] }
     }
 
     /// Returns the processed pairs that are contained within a row of `board`. A pair is encoded
@@ -147,8 +148,9 @@ impl PlayfairState {
     /// # Arguments
     /// 
     /// - `message`: byte encoded text message.
-    pub fn process(&self, message: &str) -> Vec<PlayfairPair> {
+    pub fn digest(&mut self, message: &str) {
 
+        let message = message.replace(" ", "").to_uppercase();
         let message = message.as_bytes();
         let mut data = vec![];
         let mut message = message.to_vec();
@@ -164,63 +166,56 @@ impl PlayfairState {
             };
             data.push(pair);
         }
-        data
+        self.msg_digested = data;
     }
 
-    // pub fn encode(&self, message: &[u8], method: PlayfairMethod) -> Vec<PlayfairPair> {
+    /// Show debug information for digested message.
+    pub fn show(&self) {
+        for pair in &self.msg_digested {
+            print!("{} {} ", pair.x, pair.y);
+        }
+        print!("\n");
+        for pair in &self.msg_digested {
+            print!("{} {} ", pair.x as char, pair.y as char);
+        }
+        print!("\n");
+    }
 
-    //     let mut data = vec![];
-    //     let message = self.process(message);
+    /// Perform PlayfairCypher encoding/decoding on the digested message.
+    /// # Arguments
+    /// 
+    /// - `method`: specify the method, either `encode` or `decode`.
+    pub fn playfair(&mut self, method: PlayfairMethod) -> String {
 
-    //     for pair in message {
-    //         let encoded = self.process_pair([pair.x, pair.y], &method);
-    //         let pair_encoded = PlayfairPair {
-    //             x: encoded[0],
-    //             y: encoded[1]
-    //         };
-    //         data.push(pair_encoded);
-    //     }
-    //     data
-    // }
+        let mut data = String::new();
+
+        for pair in &self.msg_digested {
+            let pair_encoded = self.process_pair([pair.x, pair.y], &method);
+            
+            data.push(pair_encoded[0] as char);
+            data.push(pair_encoded[1] as char);
+        }
+        data
+    }
 }
 
 pub fn main() {
 
-    // const CHARS: &[u8; 25] = b"ABCDEFGHIJKLMNOPQRSTUVXYZ";
+    const CHARS: &[u8; 25] = b"ABCDEFGHIJKLMNOPQRSTUVXYZ";
 
-    // let p = PlayfairState::init(CHARS);
+    let mut p = PlayfairState::init(CHARS);
+    println!("{}", p.board);
 
-    // let pair = ['G' as u8, 'O' as u8];
+    let msg = "Hello mr peter";
+    p.digest(msg);
+    p.show();
 
-    // println!("{}", p.board);
+    let encoded = p.playfair(PlayfairMethod::ENCODE);
+    println!("encoded: {}", encoded);
 
-    // //println!("encode: {:?}", p.encode_pair(pair));
+    p.digest(&encoded);
+    p.show();
 
-    // let data = p.process(b"HELLOMRSVANSON");
-    // for item in &data {
-    //     print!("{} {} ", item.x, item.y);
-    // }
-    // print!("\n");
-    // for item in &data {
-    //     print!("{} {} ", item.x as char, item.y as char);
-    // }
-    // print!("\n");
-
-    // let data = p.encode(b"HELLOMRSVANSON", PlayfairMethod::ENCODE);
-    // for item in &data {
-    //     print!("{} {} ", item.x, item.y);
-    // }
-    // print!("\n");
-    // for item in &data {
-    //     print!("{} {} ", item.x as char, item.y as char);
-    // }
-    // print!("\n");
-
-    // /* Array test */
-    // let s = [[1; 3]; 2];
-    // println!("s: {:?}", s);
-    // println!("s row: {}", s.len());
-    // println!("s col: {}", s[0].len());
-
-    // println!("decode: {:?}", p.process_pair([67, 76], &PlayfairMethod::DECODE));
+    let decoded = p.playfair(PlayfairMethod::DECODE);
+    println!("decoded: {}", decoded);
 }
