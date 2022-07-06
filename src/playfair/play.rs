@@ -23,7 +23,7 @@ impl PlayfairState {
         let mut data: Vec<char> = vec![];
         let phrase = phrase.replace(" ", "").to_uppercase();
         let phrase = phrase.as_bytes();
-        const ALPHABET: &[u8; 25] = b"ABCDEFGHIJKLMNOPQRSTUVXYZ";
+        const ALPHABET: &[u8; 25] = b"ABCDEFGHIKLMNOPQRSTUVWXYZ";
     
         for letter in phrase {
             if !data.contains(&(*letter as char)) {
@@ -175,10 +175,8 @@ impl PlayfairState {
     /// - `message`: byte encoded text message.
     pub fn digest(&mut self, message: &str) {
 
-        let message = message.replace(" ", "").to_uppercase();
-        let message = message.as_bytes();
         let mut data = vec![];
-        let mut message = message.to_vec();
+        let mut message = self.filter(message);
 
         if message.len() % 2 != 0 {
             message.push('X' as u8);
@@ -218,16 +216,24 @@ impl PlayfairState {
         }
         data
     }
+
+    /// Return a filtered array. Removing everything except the byte representation of the uppercase english
+    /// alphabet, except for the letter `J`.
+    /// https://en.wikipedia.org/wiki/Playfair_cipher
+    fn filter(&self, msg: &str) -> Vec<u8> {
+        let msg = msg.to_uppercase().as_bytes().to_vec();
+        let msg: Vec<u8> = msg.into_iter().filter(|&x| x >= 65 && x <= 90 && x != 74).collect();
+        println!("msg is: {:?}", msg);
+        msg
+    }
 }
 
 pub fn main() {
 
-    //const CHARS: &[u8; 25] = b"ABCDEFGHIJKLMNOPQRSTUVXYZ";
-
-    let mut p = PlayfairState::init("Playfair exmaple").unwrap();
+    let mut p = PlayfairState::init("Grunts").unwrap();
     println!("{}", p.board);
 
-    let msg = "Hello mr peter";
+    let msg = "Hello, how are you on this fine evening?";
     p.digest(msg);
     p.show();
 
