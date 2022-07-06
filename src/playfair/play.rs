@@ -218,4 +218,31 @@ pub fn main() {
 
     let decoded = p.playfair(PlayfairMethod::DECODE);
     println!("decoded: {}", decoded);
+
+    let phrase = create_playfair("playfair example");
+    println!("length: {}", phrase.len());
+    for p in phrase {
+        print!("{}", p as char);
+    }
+}
+
+fn create_playfair(phrase: &str) -> Vec<u8> {
+
+    let mut data: Vec<u8> = vec![];
+    let phrase = phrase.replace(" ", "").to_uppercase();
+    let phrase = phrase.as_bytes();
+    const ALPHABET: &[u8; 25] = b"ABCDEFGHIJKLMNOPQRSTUVXYZ";
+
+    for letter in phrase {
+        if !data.contains(letter) {
+            data.push(*letter);
+        }      
+    }
+
+    for letter in ALPHABET {
+        if !data.contains(&letter) {
+            data.push(*letter);
+        }
+    }
+    data
 }
