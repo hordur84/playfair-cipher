@@ -218,10 +218,12 @@ impl PlayfairState {
         data
     }
 
+    /// Encode message using Playfair encoding.
     pub fn playfair_encode(&mut self) -> String {
         self.playfair(PlayfairMethod::ENCODE)
     }
 
+    /// Decode encoded Playfair message.
     pub fn playfair_decode(&mut self) -> String {
         self.playfair(PlayfairMethod::DECODE)
     }
@@ -234,23 +236,4 @@ impl PlayfairState {
         let msg: Vec<u8> = msg.into_iter().filter(|&x| x >= 65 && x <= 90 && x != 74).collect();
         msg
     }
-}
-
-pub fn main() {
-
-    // let mut p = PlayfairState::init("Grunts").unwrap();
-    // println!("{}", p.board);
-
-    // let msg = "Hello, how are you on this fine evening?";
-    // p.digest(msg);
-    // p.show();
-
-    // let encoded = p.playfair(PlayfairMethod::ENCODE);
-    // println!("encoded: {}", encoded);
-
-    // p.digest(&encoded);
-    // p.show();
-
-    // let decoded = p.playfair(PlayfairMethod::DECODE);
-    // println!("decoded: {}", decoded);
 }
